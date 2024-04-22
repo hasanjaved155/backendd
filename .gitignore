@@ -1,2 +1,8 @@
+# folders
 /node_modules
+/logs
+
+# Files
 .env
+combined.log
+.idea
