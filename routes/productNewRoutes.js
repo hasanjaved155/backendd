@@ -23,7 +23,9 @@ const {
     productListController,
     searchProductController,
     relatedProductController,
-    productCategoryController
+    productCategoryController,
+    braintreeTokenController,
+    brainTreePaymentController
 } = require('../controllers/productController');
 const ExpressFormidable = require('express-formidable');
 
@@ -63,9 +65,14 @@ router.get("/search/:keyword", searchProductController)
 router.get('/related-product/:pid/:cid', relatedProductController)
 
 // category wise product
-
-
 router.get('/product-category/:slug', productCategoryController)
+
+//payment routes
+// token
+router.get('/braintree/token', braintreeTokenController)
+
+//payments
+router.post('/braintree/payment', requireSignIn, brainTreePaymentController)
 
 
 router.post("/upload", ExpressFormidable({ maxFieldsSize: 5 * 2024 * 2024 }), async (req, res) => {

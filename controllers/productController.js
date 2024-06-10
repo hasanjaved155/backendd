@@ -3,6 +3,22 @@
 const slugify = require('slugify');
 const productNewModel = require('../model/productNewModel');
 const categoryModel = require('../model/categoryModel');
+const orderModel = require('../model/orderModel');
+
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+var braintree = require('braintree');
+
+
+
+var gateway = new braintree.BraintreeGateway({
+    environment: braintree.Environment.Sandbox,
+    merchantId: process.env.BRAINTREE_MERCHANT_ID,
+    publicKey: process.env.BRAINTREE_PUBLIC_KEY,
+    privateKey: process.env.BRAINTREE_PRIVATE_KEY,
+});
 
 // exports.createProductController = async (req, res) => {
 //     try {
@@ -363,5 +379,58 @@ exports.productCategoryController = async (req, res) => {
             message: "Error in getting products",
             error
         });
+    }
+}
+
+
+// token
+
+exports.braintreeTokenController = async (req, res) => {
+    try {
+        gateway.clientToken.generate({}, function (err, response) {
+            if (err) {
+                res.status(500).send(err);
+            } else {
+                res.send(response)
+            }
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+//payment
+
+exports.brainTreePaymentController = (req, res) => {
+    try {
+        const { cart, nonce } = req.body;
+        let total = 0;
+        cart.map((i) => {
+            total += i.price;
+        });
+        let newTransaction = gateway.transaction.sale({
+            amount: total,
+            paymentMethodNonce: nonce,
+            options: {
+                submitForSettlement: true
+            }
+        },
+            function (error, result) {
+                if (result) {
+                    const order = new orderModel({
+                        products: cart,
+                        payment: result,
+                        buyer: req.user._id
+                    }).save()
+                    res.json({ ok: true })
+                } else {
+                    res.status(500).send(error)
+                }
+            }
+
+        )
+
+    } catch (error) {
+        console.log(error)
     }
 }
