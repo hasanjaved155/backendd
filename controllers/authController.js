@@ -1,4 +1,5 @@
 const { hashPassword, comparePassword } = require('../helpers/authHelper');
+const orderModel = require('../model/orderModel');
 const userModel = require('../model/userModel');
 const JWT = require('jsonwebtoken');
 
@@ -191,6 +192,40 @@ exports.updateProfileController = async (req, res) => {
         res.status(500).send({
             success: false,
             message: "Error while updating profile",
+            error,
+        });
+    }
+}
+
+//orders
+
+exports.getOrderController = async (req, res) => {
+    try {
+
+        const orders = await orderModel.find({ buyer: req.user._id }).populate("products").populate("buyer", "name")
+        res.json(orders);
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            success: false,
+            message: "Error while in getting orders",
+            error,
+        });
+    }
+}
+
+exports.getAllOrdersController = async (req, res) => {
+    try {
+
+        const orders = await orderModel.find({}).populate("products").populate("buyer", "name").sort({ createdAt: -1 });
+        res.json(orders);
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            success: false,
+            message: "Error while in getting orders",
             error,
         });
     }
